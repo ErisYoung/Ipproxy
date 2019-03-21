@@ -2,19 +2,18 @@ import re
 import redis
 from random import choice
 from settings import *
-
+from error import PoolEmptyError
 
 class RedisClient():
     def __init__(self, host=REDIS_HOST, port=REDIS_PORT, password=REDIS_PASSWORD):
         self.db = redis.StrictRedis(host=host, port=port, password=password, decode_responses=True)
 
     def add(self, proxy, score=INITIAL_SCORE):
-        if not re.match(r'\d+.\d+.\d+.\d+.:\d+',proxy):
-            # print("代理不和逻辑")
+        if not re.match(r'\d*.\d*.\d*.\d*.:\d+',proxy):
+            print("代理不符合",proxy)
             return None
-        print(proxy)
         if not self.db.zscore(REDIS_KEY, proxy):
-            return self.db.zadd(REDIS_KEY, score, proxy)
+            return self.db.zadd(REDIS_KEY, {proxy:score})
 
     def random(self):
         result = self.db.zrangebyscore(REDIS_KEY, MAX_SCORE, MAX_SCORE)
